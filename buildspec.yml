@@ -19,9 +19,9 @@ phases:
   post_build:
     commands:
       - echo Pushing the Docker image to Amazon ECR...
-      - docker push $ECR_REPOSITORY_URI:$IMAGE_TAG
-      - docker push $ECR_REPOSITORY_URI:latest
-artifacts:
-  files:
-    - imagedefinitions.json # If deploying to ECS, this file is useful
-  discard-paths: yes
+      - docker push 864899853618.dkr.ecr.ap-south-1.amazonaws.com/test-python-app:$IMAGE_TAG
+      - docker push 864899853618.dkr.ecr.ap-south-1.amazonaws.com/test-python-app:latest
+# artifacts:
+#  files:
+#    - imagedefinitions.json # If deploying to ECS, this file is useful
+#  discard-paths: yes
