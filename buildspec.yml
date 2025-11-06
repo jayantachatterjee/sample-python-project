@@ -1,26 +1,57 @@
-version: 0.2
+# version: 0.2
+
+#phases:
+#  install:
+#    runtime-versions:
+#      python: 3.9 # Specify your desired Python version
+#  pre_build:
+#    commands:
+#      - echo Logging in to Amazon ECR...
+#      - aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 864899853618.dkr.ecr.ap-south-1.amazonaws.com
+#  build:
+#    commands:
+#      - echo Building the Docker image...
+#      - docker build -t 864899853618.dkr.ecr.ap-south-1.amazonaws.com/test-python-app:$CODEBUILD_RESOLVED_SOURCE_VERSION .
+#      - echo Tagging the Docker image...
+#      - docker tag 864899853618.dkr.ecr.ap-south-1.amazonaws.com/test-python-app:$CODEBUILD_RESOLVED_SOURCE_VERSION 864899853618.dkr.ecr.ap-south-1.amazonaws.com/test-python-app:latest  
+#  post_build:
+#    commands:
+#      - echo Pushing the Docker image to Amazon ECR...
+#      - docker push 864899853618.dkr.ecr.ap-south-1.amazonaws.com/test-python-app:$CODEBUILD_RESOLVED_SOURCE_VERSION
+#      - docker push 864899853618.dkr.ecr.ap-south-1.amazonaws.com/test-python-app:latest
+# artifacts:
+  # files:
+  #  - '**/*'
+  #  - imagedefinitions.json # If deploying to ECS, this file is useful
+  # discard-paths: yes
+
+  # -----------------
+
+  version: 0.2
 
 phases:
-  install:
-    runtime-versions:
-      python: 3.9 # Specify your desired Python version
   pre_build:
     commands:
       - echo Logging in to Amazon ECR...
-      - aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 864899853618.dkr.ecr.ap-south-1.amazonaws.com
+      - aws --version
+      - $(aws ecr get-login --no-include-email --region ap-south-1)
+      - REPOSITORY_URI=864899853618.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/test-python-app
+      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - IMAGE_TAG=${COMMIT_HASH:=latest}
   build:
     commands:
+      - echo Build started on `date`
       - echo Building the Docker image...
-      - docker build -t 864899853618.dkr.ecr.ap-south-1.amazonaws.com/test-python-app:$CODEBUILD_RESOLVED_SOURCE_VERSION .
-      - echo Tagging the Docker image...
-      - docker tag 864899853618.dkr.ecr.ap-south-1.amazonaws.com/test-python-app:$CODEBUILD_RESOLVED_SOURCE_VERSION 864899853618.dkr.ecr.ap-south-1.amazonaws.com/test-python-app:latest  
+      - docker build -t $REPOSITORY_URI:$IMAGE_TAG .
+      - docker tag $REPOSITORY_URI:$IMAGE_TAG $REPOSITORY_URI:latest
   post_build:
     commands:
-      - echo Pushing the Docker image to Amazon ECR...
-      - docker push 864899853618.dkr.ecr.ap-south-1.amazonaws.com/test-python-app:$CODEBUILD_RESOLVED_SOURCE_VERSION
-      - docker push 864899853618.dkr.ecr.ap-south-1.amazonaws.com/test-python-app:latest
+      - echo Build completed on `date`
+      - echo Pushing the Docker images...
+      - docker push $REPOSITORY_URI:$IMAGE_TAG
+      - docker push $REPOSITORY_URI:latest
+      - echo Writing image definitions file...
+      - printf '[{"name":"YOUR_CONTAINER_NAME","imageUri":"%s"}]' $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
 artifacts:
   files:
-    - '**/*'
-    - imagedefinitions.json # If deploying to ECS, this file is useful
-  discard-paths: yes
+    - imagedefinitions.json
