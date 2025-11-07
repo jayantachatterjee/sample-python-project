@@ -3,7 +3,7 @@ phases:
   pre_build:
     commands:
       - echo Logging in to Amazon ECR...
-      - aws --version
+      # - aws --version
       # - aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 864899853618.dkr.ecr.ap-south-1.amazonaws.com$(aws ecr get-login --no-include-email --region ap-south-1)
       - aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 864899853618.dkr.ecr.ap-south-1.amazonaws.com
       - REPOSITORY_URI=864899853618.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/test-python-app
